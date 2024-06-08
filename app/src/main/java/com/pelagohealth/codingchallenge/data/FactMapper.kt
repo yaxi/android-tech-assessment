@@ -10,7 +10,8 @@ class FactMapper @Inject constructor() {
     fun mapToFact(from: APIFact): Fact {
         return Fact(
             text = from.text,
-            url = from.sourceUrl
+            url = from.sourceUrl,
+            id = from.id
         )
     }
 }

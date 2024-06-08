@@ -13,7 +13,7 @@ class FactRepository @Inject constructor(
     private val mapper: FactMapper
 ) {
     
-    suspend fun get(): Fact {
+    suspend fun getFact(): Fact {
         return mapper.mapToFact(from = api.getFact())
     }
 }
