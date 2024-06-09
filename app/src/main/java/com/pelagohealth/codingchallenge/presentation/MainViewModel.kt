@@ -23,6 +23,10 @@ class MainViewModel @Inject constructor(
     private val _viewState = MutableStateFlow(MainViewState())
     val viewState: StateFlow<MainViewState> = _viewState.asStateFlow()
 
+    init {
+        fetchNewFact()
+    }
+
     fun fetchNewFact() {
         viewModelScope.launch(dispatchers.io) {
             setState { copy(isLoading = true) }
