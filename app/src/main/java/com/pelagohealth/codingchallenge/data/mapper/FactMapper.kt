@@ -1,4 +1,4 @@
-package com.pelagohealth.codingchallenge.data
+package com.pelagohealth.codingchallenge.data.mapper
 
 import com.pelagohealth.codingchallenge.data.datasource.rest.APIFact
 import com.pelagohealth.codingchallenge.domain.model.Fact
