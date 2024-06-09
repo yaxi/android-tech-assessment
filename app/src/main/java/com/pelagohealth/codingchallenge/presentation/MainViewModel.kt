@@ -34,7 +34,9 @@ class MainViewModel @Inject constructor(
             setState {
                 val list = ArrayDeque(_viewState.value.facts)
                 val current = _viewState.value.fact
-                list.add(current)
+                if (current.id.isNotEmpty()) {
+                    list.addFirst(current)
+                }
                 trimList(list)
                 copy(
                     fact = fact,
