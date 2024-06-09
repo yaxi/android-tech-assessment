@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -47,6 +48,7 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pelagohealth.codingchallenge.R
 import com.pelagohealth.codingchallenge.domain.model.Fact
 import com.pelagohealth.codingchallenge.presentation.MainViewModel
 import com.pelagohealth.codingchallenge.presentation.ui.viewstate.MainViewState
@@ -82,7 +84,7 @@ private fun MainScreen(
             modifier = Modifier.padding(16.dp)
         )
         Button(onClick = onFetchFact) {
-            Text("More facts!")
+            Text(stringResource(R.string.action_more_facts))
         }
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp)

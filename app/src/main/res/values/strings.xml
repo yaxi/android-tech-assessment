@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Pelago Coding Challenge</string>
+    <string name="action_more_facts">More facts!</string>
 </resources>
