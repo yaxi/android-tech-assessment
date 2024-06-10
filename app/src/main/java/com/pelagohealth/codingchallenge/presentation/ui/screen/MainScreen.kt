@@ -1,6 +1,7 @@
 package com.pelagohealth.codingchallenge.presentation.ui.screen
 
 import android.os.Build
+import android.util.StateSet
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,9 +18,12 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.constraintlayout.compose.atMost
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pelagohealth.codingchallenge.R
 import com.pelagohealth.codingchallenge.domain.model.Fact
@@ -170,12 +175,14 @@ private fun MainScreen(
                                 bottom.linkTo(buttonRef.top, margin = 16.dp)
                                 start.linkTo(parent.start)
                                 end.linkTo(parent.end)
+                                height = Dimension.fillToConstraints
                                 width = Dimension.fillToConstraints
                             }
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 16.dp)
+                            .verticalScroll(rememberScrollState()),
                         text = state.fact.text,
                         textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp)
+                        style = MaterialTheme.typography.headlineSmall
                     )
                 }
 
@@ -184,7 +191,7 @@ private fun MainScreen(
                         bottom.linkTo(listRef.top, margin = 16.dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
-                        width = Dimension.value(200.dp)
+                        width = Dimension.value(216.dp)
                     },
                     onClick = onFetchFact
                 ) {
@@ -222,6 +229,9 @@ private fun MainScreen(
                                 undoIndex = i
                             }
                         )
+                        if (i < state.facts.lastIndex) {
+                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                        }
                     }
                 }
             }
@@ -338,6 +348,26 @@ private fun DismissibleItem(
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview(@PreviewParameter(LoremIpsum::class) text: String) {
+    PelagoCodingChallengeTheme {
+        MainScreen(
+            state = MainViewState(
+                fact = Fact(text = text.take(500), "", "0"),
+                facts = listOf(
+                    Fact(text.take(10), "", "1"),
+                    Fact(text.takeLast(100), "", "2"),
+                    Fact(text.takeLast(150), "", "3")
+                )
+            ),
+            onFetchFact = {},
+            onRemove = {},
+            onUndo = { _, _ -> },
+            onConfirmRemoval = {})
+    }
+}
+
+@Preview(showBackground = true, device = "spec:parent=pixel_5,orientation=landscape", )
+@Composable
+fun MainScreenPreviewLandscape(@PreviewParameter(LoremIpsum::class) text: String) {
     PelagoCodingChallengeTheme {
         MainScreen(
             state = MainViewState(
