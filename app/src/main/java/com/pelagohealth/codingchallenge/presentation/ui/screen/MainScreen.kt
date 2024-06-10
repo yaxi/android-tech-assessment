@@ -18,9 +18,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissState
-import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -29,9 +26,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxState
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDismissState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -73,7 +72,7 @@ fun MainScreen() {
         state = state,
         onFetchFact = { viewModel.fetchNewFact() },
         onRemove = { id -> viewModel.removeFact(id) },
-        onUndo = {id, index -> viewModel.undoRemove(id, index)},
+        onUndo = { id, index -> viewModel.undoRemove(id, index) },
         onConfirmRemoval = { id -> viewModel.confirmRemoval(id) }
     )
 }
@@ -179,10 +178,10 @@ private fun MainScreen(
                 ) {
                     itemsIndexed(
                         items = state.facts,
-                        key = { _: Int, t: Fact -> t.id}
+                        key = { _: Int, t: Fact -> t.id }
                     ) { i: Int, fact: Fact ->
-                        val dismissState = rememberDismissState()
-                        if (dismissState.currentValue != DismissValue.Default) {
+                        val dismissState = rememberSwipeToDismissBoxState()
+                        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
                             LaunchedEffect(key1 = shouldUndo) {
                                 if (shouldUndo) {
                                     dismissState.reset()
@@ -191,10 +190,9 @@ private fun MainScreen(
                         }
 
                         DismissibleItem(
-                            dismissState,
+                            dismissState = dismissState,
                             fact = fact,
                             onRemove = { id ->
-//                                onRemove(id)
                                 undoId = id
                                 showUndo = true
                                 undoIndex = i
@@ -209,12 +207,13 @@ private fun MainScreen(
 
 @Composable
 private fun DismissibleItem(
-    dismissState: DismissState,
+    modifier: Modifier = Modifier,
+    dismissState: SwipeToDismissBoxState,
     fact: Fact,
     onRemove: (id: String) -> Unit
 ) {
-    if (dismissState.isDismissed(DismissDirection.EndToStart) ||
-        dismissState.isDismissed(DismissDirection.StartToEnd)
+    if (dismissState.currentValue == SwipeToDismissBoxValue.StartToEnd ||
+        dismissState.currentValue == SwipeToDismissBoxValue.EndToStart
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             LocalView.current.performHapticFeedback((HapticFeedbackConstants.CONFIRM))
@@ -224,12 +223,13 @@ private fun DismissibleItem(
         onRemove(fact.id)
     }
 
-    SwipeToDismiss(
+    SwipeToDismissBox(
+        modifier = modifier,
         state = dismissState,
-        background = {
+        backgroundContent = {
             val alpha by animateFloatAsState(
                 targetValue = when (dismissState.targetValue) {
-                    DismissValue.Default -> 0f
+                    SwipeToDismissBoxValue.Settled -> 0f
                     else -> 1f
                 },
                 label = "alpha animation"
@@ -237,7 +237,7 @@ private fun DismissibleItem(
 
             val color by animateColorAsState(
                 targetValue = when (dismissState.targetValue) {
-                    DismissValue.Default -> MaterialTheme.colorScheme.background.copy(
+                    SwipeToDismissBoxValue.Settled -> MaterialTheme.colorScheme.background.copy(
                         alpha = alpha
                     )
 
@@ -262,18 +262,17 @@ private fun DismissibleItem(
             }
 
         },
-        directions = setOf(DismissDirection.EndToStart, DismissDirection.StartToEnd),
-        dismissContent = {
+        content = {
             val textAlpha by animateFloatAsState(
                 targetValue = when (dismissState.targetValue) {
-                    DismissValue.Default -> 1f
+                    SwipeToDismissBoxValue.Settled -> 1f
                     else -> 0.5f
                 },
                 label = "text alpha animation"
             )
             val textColor by animateColorAsState(
                 targetValue = when (dismissState.targetValue) {
-                    DismissValue.Default -> MaterialTheme.colorScheme.onSurface.copy(alpha = textAlpha)
+                    SwipeToDismissBoxValue.Settled -> MaterialTheme.colorScheme.onSurface.copy(alpha = textAlpha)
                     else -> MaterialTheme.colorScheme.onError.copy(alpha = textAlpha)
                 },
                 label = "text color animation"
