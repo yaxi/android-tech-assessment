@@ -3,4 +3,5 @@
     <string name="action_more_facts">More facts!</string>
     <string name="action_undo">Undo</string>
     <string name="fact_removed">Fact removed.</string>
+    <string name="error_message">Error on getting Facts. Error: %1$s</string>
 </resources>

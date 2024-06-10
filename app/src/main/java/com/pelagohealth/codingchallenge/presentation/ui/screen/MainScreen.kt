@@ -7,10 +7,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -122,12 +125,23 @@ private fun MainScreen(
                         shouldUndo = true
                         onUndo(undoId, undoIndex)
                     }
+
                     SnackbarResult.Dismissed -> {
                         shouldUndo = false
                         onConfirmRemoval(undoId)
                     }
                 }
             }
+        }
+    }
+
+    val errorMessage = stringResource(R.string.error_message, state.error?.message ?: "")
+    LaunchedEffect(key1 = state.error) {
+        if (state.error != null) {
+            snackbarHostState.showSnackbar(
+                message = errorMessage,
+                duration = SnackbarDuration.Long
+            )
         }
     }
 
@@ -140,21 +154,31 @@ private fun MainScreen(
             modifier = Modifier.padding(paddingValues = contentPadding)
         ) {
             ConstraintLayout(Modifier.fillMaxSize()) {
-                val (currentRef, buttonRef, listRef) = createRefs()
-                Text(
-                    modifier = Modifier
-                        .constrainAs(currentRef) {
-                            top.linkTo(parent.top, margin = 16.dp)
-                            bottom.linkTo(buttonRef.top, margin = 16.dp)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                            width = Dimension.fillToConstraints
-                        }
-                        .padding(horizontal = 16.dp),
-                    text = state.fact.text,
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp)
-                )
+                val (currentRef, buttonRef, listRef, loadingRef) = createRefs()
+                if (state.isLoading) {
+                    LoadingIndicator(Modifier.constrainAs(loadingRef) {
+                        top.linkTo(parent.top, margin = 16.dp)
+                        bottom.linkTo(buttonRef.top, margin = 16.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    })
+                } else {
+                    Text(
+                        modifier = Modifier
+                            .constrainAs(currentRef) {
+                                top.linkTo(parent.top, margin = 16.dp)
+                                bottom.linkTo(buttonRef.top, margin = 16.dp)
+                                start.linkTo(parent.start)
+                                end.linkTo(parent.end)
+                                width = Dimension.fillToConstraints
+                            }
+                            .padding(horizontal = 16.dp),
+                        text = state.fact.text,
+                        textAlign = TextAlign.Start,
+                        style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp)
+                    )
+                }
+
                 Button(
                     modifier = Modifier.constrainAs(buttonRef) {
                         bottom.linkTo(listRef.top, margin = 16.dp)
@@ -202,6 +226,24 @@ private fun MainScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LoadingIndicator(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = "Loading Random Facts",
+            textAlign = TextAlign.Center
+        )
+        LinearProgressIndicator(modifier = Modifier.width(200.dp))
     }
 }
 
@@ -308,7 +350,22 @@ fun MainScreenPreview(@PreviewParameter(LoremIpsum::class) text: String) {
             ),
             onFetchFact = {},
             onRemove = {},
-            onUndo = {_, _ -> },
+            onUndo = { _, _ -> },
+            onConfirmRemoval = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenPreviewLoading(@PreviewParameter(LoremIpsum::class) text: String) {
+    PelagoCodingChallengeTheme {
+        MainScreen(
+            state = MainViewState(
+                isLoading = true
+            ),
+            onFetchFact = {},
+            onRemove = {},
+            onUndo = { _, _ -> },
             onConfirmRemoval = {})
     }
 }

@@ -1,5 +1,7 @@
 package com.pelagohealth.codingchallenge.data.datasource.rest
 
+import com.pelagohealth.codingchallenge.data.Resource
+import retrofit2.Response
 import retrofit2.http.GET
 
 /**
@@ -8,5 +10,5 @@ import retrofit2.http.GET
 interface FactsRestApi {
 
     @GET("facts/random")
-    suspend fun getFact(): APIFact
+    suspend fun getFact(): Response<APIFact>
 }

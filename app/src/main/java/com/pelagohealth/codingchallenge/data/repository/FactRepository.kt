@@ -1,5 +1,6 @@
 package com.pelagohealth.codingchallenge.data.repository
 
+import com.pelagohealth.codingchallenge.data.Resource
 import com.pelagohealth.codingchallenge.data.mapper.FactMapper
 import com.pelagohealth.codingchallenge.data.datasource.rest.FactsRestApi
 import com.pelagohealth.codingchallenge.domain.model.Fact
@@ -15,7 +16,13 @@ class FactRepository @Inject constructor(
     private val mapper: FactMapper
 ) {
     
-    suspend fun getFact(): Fact {
-        return mapper.mapToFact(from = api.getFact())
+    suspend fun getFact(): Resource<Fact> {
+        val response = api.getFact()
+        if (response.isSuccessful && response.body() != null) {
+            val fact = mapper.mapToFact(from = response.body()!!)
+            return Resource.Success(data = fact)
+        } else {
+            return Resource.Error(error = Throwable(message = response.code().toString()))
+        }
     }
 }

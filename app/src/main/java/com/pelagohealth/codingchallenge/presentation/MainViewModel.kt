@@ -2,12 +2,14 @@ package com.pelagohealth.codingchallenge.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pelagohealth.codingchallenge.data.Resource
 import com.pelagohealth.codingchallenge.data.repository.FactRepository
 import com.pelagohealth.codingchallenge.domain.CoroutineDispatcherModule
 import com.pelagohealth.codingchallenge.domain.CoroutineDispatchers
 import com.pelagohealth.codingchallenge.domain.model.Fact
 import com.pelagohealth.codingchallenge.presentation.ui.viewstate.MainViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +25,9 @@ class MainViewModel @Inject constructor(
 
     private val _viewState = MutableStateFlow(MainViewState())
     val viewState: StateFlow<MainViewState> = _viewState.asStateFlow()
+    private val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
+        setState { copy(error = throwable) }
+    }
 
     private val undoStack by lazy {
         Stack<Fact>()
@@ -33,21 +38,29 @@ class MainViewModel @Inject constructor(
     }
 
     fun fetchNewFact() {
-        viewModelScope.launch(dispatchers.io) {
-            setState { copy(isLoading = true) }
-            val fact = repository.getFact()
-            setState {
-                val list = ArrayDeque(_viewState.value.facts)
-                val current = _viewState.value.fact
-                if (current.id.isNotEmpty()) {
-                    list.addFirst(current)
+        viewModelScope.launch(dispatchers.io + exceptionHandler) {
+            setState { copy(isLoading = true, error = null) }
+            val result = repository.getFact()
+            if (result is Resource.Success) {
+                val fact = result.data
+                setState {
+                    val list = ArrayDeque(_viewState.value.facts)
+                    val current = _viewState.value.fact
+                    if (current.id.isNotEmpty()) {
+                        list.addFirst(current)
+                    }
+                    trimList(list)
+                    copy(
+                        fact = fact,
+                        facts = list,
+                        isLoading = false
+                    )
                 }
-                trimList(list)
-                copy(
-                    fact = fact,
-                    facts = list,
-                    isLoading = false
-                )
+            } else {
+                val error = (result as Resource.Error).error
+                setState {
+                    copy(isLoading = false, error = error)
+                }
             }
         }
     }
@@ -85,7 +98,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun setState(reducer: MainViewState.() -> MainViewState) {
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch(dispatchers.main + exceptionHandler) {
             _viewState.value = reducer(_viewState.value)
         }
     }
