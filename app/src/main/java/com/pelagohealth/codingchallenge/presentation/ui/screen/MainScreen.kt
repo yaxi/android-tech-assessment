@@ -13,15 +13,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissState
 import androidx.compose.material3.DismissValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
@@ -30,6 +36,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -52,6 +62,7 @@ import com.pelagohealth.codingchallenge.domain.model.Fact
 import com.pelagohealth.codingchallenge.presentation.MainViewModel
 import com.pelagohealth.codingchallenge.presentation.ui.viewstate.MainViewState
 import com.pelagohealth.codingchallenge.ui.theme.PelagoCodingChallengeTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen() {
@@ -61,7 +72,9 @@ fun MainScreen() {
     MainScreen(
         state = state,
         onFetchFact = { viewModel.fetchNewFact() },
-        onDismiss = { id -> viewModel.removeFact(id) }
+        onRemove = { id -> viewModel.removeFact(id) },
+        onUndo = {id, index -> viewModel.undoRemove(id, index)},
+        onConfirmRemoval = { id -> viewModel.confirmRemoval(id) }
     )
 }
 
@@ -69,56 +82,125 @@ fun MainScreen() {
 private fun MainScreen(
     state: MainViewState,
     onFetchFact: () -> Unit,
-    onDismiss: (id: String) -> Unit
+    onRemove: (id: String) -> Unit,
+    onUndo: (id: String, index: Int) -> Unit,
+    onConfirmRemoval: (id: String) -> Unit
 ) {
     val lazyColumnState = rememberLazyListState()
     LaunchedEffect(state.facts) {
         lazyColumnState.animateScrollToItem(0)
     }
+    var undoId by remember {
+        mutableStateOf("")
+    }
+    var showUndo by remember {
+        mutableStateOf(false)
+    }
+    var undoIndex by remember {
+        mutableStateOf(-1)
+    }
+    var shouldUndo by remember {
+        mutableStateOf(false)
+    }
 
-    Surface {
-        ConstraintLayout(Modifier.fillMaxSize()) {
-            val (currentRef, buttonRef, listRef) = createRefs()
-            Text(
-                modifier = Modifier
-                    .constrainAs(currentRef) {
-                        top.linkTo(parent.top, margin = 16.dp)
-                        bottom.linkTo(buttonRef.top, margin = 16.dp)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    val actionLabel = stringResource(R.string.action_undo)
+    val message = stringResource(R.string.fact_removed)
+
+    LaunchedEffect(showUndo, undoId, undoIndex) {
+        if (showUndo && undoIndex >= 0) {
+            onRemove(undoId)
+            coroutineScope.launch {
+                val snackbarResult = snackbarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = actionLabel,
+                    duration = SnackbarDuration.Short
+                )
+                when (snackbarResult) {
+                    SnackbarResult.ActionPerformed -> {
+                        shouldUndo = true
+                        onUndo(undoId, undoIndex)
+                    }
+                    SnackbarResult.Dismissed -> {
+                        shouldUndo = false
+                        onConfirmRemoval(undoId)
+                    }
+                }
+            }
+        }
+    }
+
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+    ) { contentPadding ->
+        Surface(
+            modifier = Modifier.padding(paddingValues = contentPadding)
+        ) {
+            ConstraintLayout(Modifier.fillMaxSize()) {
+                val (currentRef, buttonRef, listRef) = createRefs()
+                Text(
+                    modifier = Modifier
+                        .constrainAs(currentRef) {
+                            top.linkTo(parent.top, margin = 16.dp)
+                            bottom.linkTo(buttonRef.top, margin = 16.dp)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            width = Dimension.fillToConstraints
+                        }
+                        .padding(horizontal = 16.dp),
+                    text = state.fact.text,
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp)
+                )
+                Button(
+                    modifier = Modifier.constrainAs(buttonRef) {
+                        bottom.linkTo(listRef.top, margin = 16.dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
-                        width = Dimension.fillToConstraints
+                        width = Dimension.value(200.dp)
+                    },
+                    onClick = onFetchFact
+                ) {
+                    Text(stringResource(R.string.action_more_facts))
+                }
+                LazyColumn(
+                    modifier = Modifier.constrainAs(listRef) {
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        bottom.linkTo(parent.bottom, margin = 16.dp)
+                        height = Dimension.value(216.dp)
+                    },
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    state = lazyColumnState
+                ) {
+                    itemsIndexed(
+                        items = state.facts,
+                        key = { _: Int, t: Fact -> t.id}
+                    ) { i: Int, fact: Fact ->
+                        val dismissState = rememberDismissState()
+                        if (dismissState.currentValue != DismissValue.Default) {
+                            LaunchedEffect(key1 = shouldUndo) {
+                                if (shouldUndo) {
+                                    dismissState.reset()
+                                }
+                            }
+                        }
+
+                        DismissibleItem(
+                            dismissState,
+                            fact = fact,
+                            onRemove = { id ->
+//                                onRemove(id)
+                                undoId = id
+                                showUndo = true
+                                undoIndex = i
+                            }
+                        )
                     }
-                    .padding(horizontal = 16.dp),
-                text = state.fact.text,
-                textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp)
-            )
-            Button(
-                modifier = Modifier.constrainAs(buttonRef) {
-                    bottom.linkTo(listRef.top, margin = 16.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                    width = Dimension.value(200.dp)
-                },
-                onClick = onFetchFact
-            ) {
-                Text(stringResource(R.string.action_more_facts))
-            }
-            LazyColumn(
-                modifier = Modifier.constrainAs(listRef) {
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom, margin = 16.dp)
-                    height = Dimension.value(216.dp)
-                },
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                state = lazyColumnState
-            ) {
-                items(
-                    items = state.facts,
-                    key = { it.id }
-                ) { fact ->
-                    DismissibleItem(fact, onDismiss)
                 }
             }
         }
@@ -127,10 +209,10 @@ private fun MainScreen(
 
 @Composable
 private fun DismissibleItem(
+    dismissState: DismissState,
     fact: Fact,
     onRemove: (id: String) -> Unit
 ) {
-    val dismissState = rememberDismissState()
     if (dismissState.isDismissed(DismissDirection.EndToStart) ||
         dismissState.isDismissed(DismissDirection.StartToEnd)
     ) {
@@ -226,6 +308,8 @@ fun MainScreenPreview(@PreviewParameter(LoremIpsum::class) text: String) {
                 )
             ),
             onFetchFact = {},
-            onDismiss = {})
+            onRemove = {},
+            onUndo = {_, _ -> },
+            onConfirmRemoval = {})
     }
 }

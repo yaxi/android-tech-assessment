@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Stack
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,6 +23,8 @@ class MainViewModel @Inject constructor(
 
     private val _viewState = MutableStateFlow(MainViewState())
     val viewState: StateFlow<MainViewState> = _viewState.asStateFlow()
+
+    private var undoFact: Fact? = null
 
     init {
         fetchNewFact()
@@ -48,10 +51,28 @@ class MainViewModel @Inject constructor(
     }
 
     fun removeFact(id: String) {
+        undoFact = _viewState.value.facts.find { it.id == id }
         val facts = _viewState.value.facts.toMutableList().filterNot {
             it.id == id
         }
+
         setState { copy(facts = facts) }
+    }
+
+    fun confirmRemoval(id: String) {
+        // clears the undo cache
+        undoFact = null
+    }
+
+    fun undoRemove(id: String, index: Int) {
+        undoFact?.let {
+            if (it.id == id) {
+                val list = ArrayDeque(_viewState.value.facts).also { l -> l.add(index, it) }
+                trimList(list)
+                setState { copy(facts = list) }
+                undoFact = null
+            }
+        }
     }
 
     private fun trimList(list: ArrayDeque<Fact>) {
