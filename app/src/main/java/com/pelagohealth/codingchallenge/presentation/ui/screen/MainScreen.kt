@@ -7,12 +7,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
@@ -25,6 +25,7 @@ import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,6 +40,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pelagohealth.codingchallenge.R
 import com.pelagohealth.codingchallenge.domain.model.Fact
@@ -64,23 +67,47 @@ private fun MainScreen(
     onFetchFact: () -> Unit,
     onDismiss: (id: String) -> Unit
 ) {
+    val lazyColumnState = rememberLazyListState()
+    LaunchedEffect(state.facts) {
+        lazyColumnState.animateScrollToItem(0)
+    }
+
     Surface {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        ConstraintLayout(Modifier.fillMaxSize()) {
+            val (currentRef, buttonRef, listRef) = createRefs()
             Text(
-                text = state.fact.text,
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier
+                    .constrainAs(currentRef) {
+                        top.linkTo(parent.top)
+                        bottom.linkTo(buttonRef.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                        width = Dimension.fillToConstraints
+                    }
+                    .padding(16.dp),
+                text = state.fact.text
             )
-            Button(onClick = onFetchFact) {
+            Button(
+                modifier = Modifier.constrainAs(buttonRef) {
+                    top.linkTo(parent.top)
+                    bottom.linkTo(parent.bottom)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                },
+                onClick = onFetchFact
+            ) {
                 Text(stringResource(R.string.action_more_facts))
             }
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.constrainAs(listRef) {
+                    top.linkTo(buttonRef.bottom, margin = 16.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                    height = Dimension.fillToConstraints
+                },
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                state = lazyColumnState
             ) {
                 items(
                     items = state.facts,
