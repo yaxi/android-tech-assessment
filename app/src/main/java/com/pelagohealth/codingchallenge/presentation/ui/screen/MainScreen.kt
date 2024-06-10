@@ -1,11 +1,13 @@
 package com.pelagohealth.codingchallenge.presentation.ui.screen
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
-import android.util.StateSet
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -59,10 +62,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.constraintlayout.compose.atMost
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pelagohealth.codingchallenge.R
 import com.pelagohealth.codingchallenge.domain.model.Fact
@@ -150,6 +151,21 @@ private fun MainScreen(
         }
     }
 
+    val context = LocalContext.current
+    var showTips by remember {
+        mutableStateOf(false)
+    }
+    val tips = stringResource(id = R.string.text_tips)
+    LaunchedEffect(key1 = showTips) {
+        if (showTips) {
+            snackbarHostState.showSnackbar(
+                message = tips,
+                duration = SnackbarDuration.Short
+            )
+            showTips = false
+        }
+    }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
@@ -179,7 +195,17 @@ private fun MainScreen(
                                 width = Dimension.fillToConstraints
                             }
                             .padding(horizontal = 16.dp)
-                            .verticalScroll(rememberScrollState()),
+                            .verticalScroll(rememberScrollState())
+                            .combinedClickable(
+                                onClick = {
+                                    showTips = true
+                                },
+                                onLongClick = {
+                                    val urlIntent =
+                                        Intent(Intent.ACTION_VIEW, Uri.parse(state.fact.url))
+                                    context.startActivity(urlIntent)
+                                }
+                            ),
                         text = state.fact.text,
                         textAlign = TextAlign.Start,
                         style = MaterialTheme.typography.headlineSmall
@@ -221,6 +247,15 @@ private fun MainScreen(
                         }
 
                         DismissibleItem(
+                            modifier = Modifier.combinedClickable(
+                                onClick = {
+                                    showTips = true
+                                },
+                                onLongClick = {
+                                    val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(fact.url))
+                                    context.startActivity(urlIntent)
+                                }
+                            ),
                             dismissState = dismissState,
                             fact = fact,
                             onRemove = { id ->
@@ -351,7 +386,7 @@ fun MainScreenPreview(@PreviewParameter(LoremIpsum::class) text: String) {
     PelagoCodingChallengeTheme {
         MainScreen(
             state = MainViewState(
-                fact = Fact(text = text.take(500), "", "0"),
+                fact = Fact(text = text.take(10), "", "0"),
                 facts = listOf(
                     Fact(text.take(10), "", "1"),
                     Fact(text.takeLast(100), "", "2"),
@@ -365,13 +400,13 @@ fun MainScreenPreview(@PreviewParameter(LoremIpsum::class) text: String) {
     }
 }
 
-@Preview(showBackground = true, device = "spec:parent=pixel_5,orientation=landscape", )
+@Preview(showBackground = true, device = "spec:parent=pixel_5,orientation=landscape")
 @Composable
 fun MainScreenPreviewLandscape(@PreviewParameter(LoremIpsum::class) text: String) {
     PelagoCodingChallengeTheme {
         MainScreen(
             state = MainViewState(
-                fact = Fact(text = text.take(250), "", "0"),
+                fact = Fact(text = text.take(500), "", "0"),
                 facts = listOf(
                     Fact(text.take(10), "", "1"),
                     Fact(text.takeLast(100), "", "2"),
