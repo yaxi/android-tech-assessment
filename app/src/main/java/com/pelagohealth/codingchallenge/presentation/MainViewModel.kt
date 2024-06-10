@@ -24,7 +24,9 @@ class MainViewModel @Inject constructor(
     private val _viewState = MutableStateFlow(MainViewState())
     val viewState: StateFlow<MainViewState> = _viewState.asStateFlow()
 
-    private var undoFact: Fact? = null
+    private val undoStack by lazy {
+        Stack<Fact>()
+    }
 
     init {
         fetchNewFact()
@@ -51,7 +53,8 @@ class MainViewModel @Inject constructor(
     }
 
     fun removeFact(id: String) {
-        undoFact = _viewState.value.facts.find { it.id == id }
+        val undoFact = _viewState.value.facts.find { it.id == id }
+        undoStack.push(undoFact)
         val facts = _viewState.value.facts.toMutableList().filterNot {
             it.id == id
         }
@@ -61,17 +64,15 @@ class MainViewModel @Inject constructor(
 
     fun confirmRemoval(id: String) {
         // clears the undo cache
-        undoFact = null
+        undoStack.clear()
     }
 
     fun undoRemove(id: String, index: Int) {
-        undoFact?.let {
-            if (it.id == id) {
-                val list = ArrayDeque(_viewState.value.facts).also { l -> l.add(index, it) }
-                trimList(list)
-                setState { copy(facts = list) }
-                undoFact = null
-            }
+        if (undoStack.isNotEmpty()) {
+            val uf = undoStack.pop()
+            val list = ArrayDeque(_viewState.value.facts).also { l -> l.add(index, uf) }
+            trimList(list)
+            setState { copy(facts = list) }
         }
     }
 
