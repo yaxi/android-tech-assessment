@@ -8,8 +8,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -35,11 +37,13 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -78,21 +82,23 @@ private fun MainScreen(
             Text(
                 modifier = Modifier
                     .constrainAs(currentRef) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(buttonRef.top)
+                        top.linkTo(parent.top, margin = 16.dp)
+                        bottom.linkTo(buttonRef.top, margin = 16.dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                         width = Dimension.fillToConstraints
                     }
-                    .padding(16.dp),
-                text = state.fact.text
+                    .padding(horizontal = 16.dp),
+                text = state.fact.text,
+                textAlign = TextAlign.Start,
+                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp)
             )
             Button(
                 modifier = Modifier.constrainAs(buttonRef) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
+                    bottom.linkTo(listRef.top, margin = 16.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
+                    width = Dimension.value(200.dp)
                 },
                 onClick = onFetchFact
             ) {
@@ -100,11 +106,10 @@ private fun MainScreen(
             }
             LazyColumn(
                 modifier = Modifier.constrainAs(listRef) {
-                    top.linkTo(buttonRef.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom)
-                    height = Dimension.fillToConstraints
+                    bottom.linkTo(parent.bottom, margin = 16.dp)
+                    height = Dimension.value(216.dp)
                 },
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 state = lazyColumnState
@@ -194,8 +199,10 @@ private fun DismissibleItem(
             Box {
                 Text(
                     modifier = Modifier
+                        .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .requiredHeight(56.dp),
+                        .requiredHeight(56.dp)
+                        .wrapContentHeight(),
                     text = fact.text,
                     color = textColor,
                     overflow = TextOverflow.Ellipsis
@@ -211,9 +218,9 @@ fun MainScreenPreview(@PreviewParameter(LoremIpsum::class) text: String) {
     PelagoCodingChallengeTheme {
         MainScreen(
             state = MainViewState(
-                fact = Fact(text = text.take(200), "", "0"),
+                fact = Fact(text = text.take(250), "", "0"),
                 facts = listOf(
-                    Fact(text.take(100), "", "1"),
+                    Fact(text.take(10), "", "1"),
                     Fact(text.takeLast(100), "", "2"),
                     Fact(text.takeLast(150), "", "3")
                 )
