@@ -74,7 +74,7 @@ class MainViewModel @Inject constructor(
         setState { copy(facts = facts) }
     }
 
-    fun confirmRemoval(id: String) {
+    fun confirmRemoval() {
         // clears the undo cache
         undoStack.clear()
     }

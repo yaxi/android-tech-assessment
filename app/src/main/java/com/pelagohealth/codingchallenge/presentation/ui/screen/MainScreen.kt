@@ -82,7 +82,7 @@ fun MainScreen() {
         onFetchFact = { viewModel.fetchNewFact() },
         onRemove = { id -> viewModel.removeFact(id) },
         onUndo = { id, index -> viewModel.undoRemove(id, index) },
-        onConfirmRemoval = { id -> viewModel.confirmRemoval(id) }
+        onConfirmRemoval = { id -> viewModel.confirmRemoval() }
     )
 }
 
