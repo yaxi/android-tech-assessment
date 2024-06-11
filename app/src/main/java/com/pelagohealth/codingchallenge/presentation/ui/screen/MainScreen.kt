@@ -1,6 +1,7 @@
 package com.pelagohealth.codingchallenge.presentation.ui.screen
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -11,12 +12,14 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -53,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
@@ -175,6 +179,7 @@ fun MainScreen(
         Surface(
             modifier = Modifier.padding(paddingValues = contentPadding)
         ) {
+            val configuration = LocalConfiguration.current
             ConstraintLayout(Modifier.fillMaxSize()) {
                 val (currentRef, buttonRef, listRef, loadingRef) = createRefs()
                 if (state.isLoading) {
@@ -187,15 +192,17 @@ fun MainScreen(
                         })
                 } else {
                     Text(
-                        modifier = Modifier
-                            .constrainAs(currentRef) {
-                                top.linkTo(parent.top, margin = 16.dp)
-                                bottom.linkTo(buttonRef.top, margin = 16.dp)
-                                start.linkTo(parent.start)
-                                end.linkTo(parent.end)
-                                height = Dimension.fillToConstraints
-                                width = Dimension.fillToConstraints
+                        modifier = Modifier.constrainAs(currentRef) {
+                            top.linkTo(parent.top, margin = 16.dp)
+                            bottom.linkTo(buttonRef.top, margin = 16.dp)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            height = if (configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                                Dimension.wrapContent
+                            } else {
+                                Dimension.fillToConstraints
                             }
+                        }
                             .padding(horizontal = 16.dp)
                             .verticalScroll(rememberScrollState())
                             .combinedClickable(
