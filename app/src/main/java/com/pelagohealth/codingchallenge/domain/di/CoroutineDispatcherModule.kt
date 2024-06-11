@@ -1,12 +1,11 @@
-package com.pelagohealth.codingchallenge.domain
+package com.pelagohealth.codingchallenge.domain.di
 
+import com.pelagohealth.codingchallenge.domain.CoroutineDispatchers
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import javax.inject.Named
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)

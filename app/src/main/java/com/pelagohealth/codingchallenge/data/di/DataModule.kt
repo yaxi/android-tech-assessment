@@ -1,4 +1,4 @@
-package com.pelagohealth.codingchallenge.data
+package com.pelagohealth.codingchallenge.data.di
 
 import com.pelagohealth.codingchallenge.BuildConfig
 import com.pelagohealth.codingchallenge.data.datasource.rest.FactsRestApi

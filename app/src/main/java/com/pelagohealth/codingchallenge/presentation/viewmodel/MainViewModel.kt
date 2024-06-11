@@ -1,10 +1,9 @@
-package com.pelagohealth.codingchallenge.presentation
+package com.pelagohealth.codingchallenge.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pelagohealth.codingchallenge.data.Resource
+import com.pelagohealth.codingchallenge.data.repository.Resource
 import com.pelagohealth.codingchallenge.data.repository.FactRepository
-import com.pelagohealth.codingchallenge.domain.CoroutineDispatcherModule
 import com.pelagohealth.codingchallenge.domain.CoroutineDispatchers
 import com.pelagohealth.codingchallenge.domain.model.Fact
 import com.pelagohealth.codingchallenge.presentation.ui.viewstate.MainViewState

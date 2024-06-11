@@ -1,6 +1,5 @@
 package com.pelagohealth.codingchallenge.data.repository
 
-import com.pelagohealth.codingchallenge.data.Resource
 import com.pelagohealth.codingchallenge.data.mapper.FactMapper
 import com.pelagohealth.codingchallenge.data.datasource.rest.FactsRestApi
 import com.pelagohealth.codingchallenge.domain.model.Fact

@@ -67,7 +67,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pelagohealth.codingchallenge.R
 import com.pelagohealth.codingchallenge.domain.model.Fact
-import com.pelagohealth.codingchallenge.presentation.MainViewModel
+import com.pelagohealth.codingchallenge.presentation.viewmodel.MainViewModel
 import com.pelagohealth.codingchallenge.presentation.ui.viewstate.MainViewState
 import com.pelagohealth.codingchallenge.ui.theme.PelagoCodingChallengeTheme
 import kotlinx.coroutines.launch
