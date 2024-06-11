@@ -1,5 +1,7 @@
 # Pelago Android Challenge
 
+<details>
+<summary> Original Readme </summary>
 This is a skeleton project for our Android coding challenge, based around the following tech stack:
 
 - Kotlin
@@ -58,3 +60,18 @@ should be good enough to give us an idea of your skills and how you approach a t
 
 You can either send us a link to a public repository (GitHub, Bitbucket, etc.) or a zip file with your project when
 you're done.
+</details>
+
+## Features
+- Included all Acceptance Criteria
+- Haptic feedback for swipe to delete
+- Supports undo swipe-to-delete
+- Supports both Portrait and Landscape
+- Main fact is scrollable in case the text is too long
+- Fact list will auto scroll to top when new item is added
+- Single tap on main fact or fact list item will show a snack bar with tips
+- Long tap on main fact or fact list item will launch browser to open the URL from the fact
+
+## Tests
+- Unit tests included 
+- UI tests included
