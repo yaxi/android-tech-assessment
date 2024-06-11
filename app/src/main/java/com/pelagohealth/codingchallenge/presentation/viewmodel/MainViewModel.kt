@@ -1,5 +1,6 @@
 package com.pelagohealth.codingchallenge.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pelagohealth.codingchallenge.data.repository.Resource
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.Stack
 import javax.inject.Inject
 
 @HiltViewModel
@@ -29,7 +29,7 @@ class MainViewModel @Inject constructor(
     }
 
     private val undoStack by lazy {
-        Stack<Fact>()
+        ArrayDeque<Fact>()
     }
 
     init {
@@ -66,25 +66,34 @@ class MainViewModel @Inject constructor(
 
     fun removeFact(id: String) {
         val undoFact = _viewState.value.facts.find { it.id == id }
-        undoStack.push(undoFact)
+        undoFact?.let {
+            undoStack.addFirst(undoFact)
+        }
         val facts = _viewState.value.facts.toMutableList().filterNot {
             it.id == id
         }
-
         setState { copy(facts = facts) }
     }
 
     fun confirmRemoval() {
-        // clears the undo cache
-        undoStack.clear()
+        // update the undo cache
+        undoStack.removeLast()
     }
 
     fun undoRemove(id: String, index: Int) {
         if (undoStack.isNotEmpty()) {
-            val uf = undoStack.pop()
-            val list = ArrayDeque(_viewState.value.facts).also { l -> l.add(index, uf) }
-            trimList(list)
-            setState { copy(facts = list) }
+            val uf = undoStack.find { it.id == id }
+            uf?.let {
+                val list = ArrayDeque(_viewState.value.facts).also { l ->
+                    if (index > l.lastIndex) {
+                        l.addLast(uf)
+                    } else {
+                        l.add(index, uf)
+                    }
+                }
+                trimList(list)
+                setState { copy(facts = list) }
+            }
         }
     }
 

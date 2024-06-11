@@ -44,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -65,7 +66,6 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pelagohealth.codingchallenge.R
 import com.pelagohealth.codingchallenge.domain.model.Fact
 import com.pelagohealth.codingchallenge.presentation.viewmodel.MainViewModel
@@ -82,7 +82,7 @@ fun MainScreen(viewModel: MainViewModel) {
         onFetchFact = { viewModel.fetchNewFact() },
         onRemove = { id -> viewModel.removeFact(id) },
         onUndo = { id, index -> viewModel.undoRemove(id, index) },
-        onConfirmRemoval = { id -> viewModel.confirmRemoval() }
+        onConfirmRemoval = { viewModel.confirmRemoval() }
     )
 }
 
@@ -92,7 +92,7 @@ fun MainScreen(
     onFetchFact: () -> Unit,
     onRemove: (id: String) -> Unit,
     onUndo: (id: String, index: Int) -> Unit,
-    onConfirmRemoval: (id: String) -> Unit
+    onConfirmRemoval: () -> Unit
 ) {
     val lazyColumnState = rememberLazyListState()
     LaunchedEffect(state.facts) {
@@ -105,7 +105,7 @@ fun MainScreen(
         mutableStateOf(false)
     }
     var undoIndex by remember {
-        mutableStateOf(-1)
+        mutableIntStateOf(-1)
     }
     var shouldUndo by remember {
         mutableStateOf(false)
@@ -119,6 +119,7 @@ fun MainScreen(
 
     LaunchedEffect(showUndo, undoId, undoIndex) {
         if (showUndo && undoIndex >= 0) {
+            snackbarHostState.currentSnackbarData?.dismiss()
             onRemove(undoId)
             coroutineScope.launch {
                 val snackbarResult = snackbarHostState.showSnackbar(
@@ -134,7 +135,7 @@ fun MainScreen(
 
                     SnackbarResult.Dismissed -> {
                         shouldUndo = false
-                        onConfirmRemoval(undoId)
+                        onConfirmRemoval()
                     }
                 }
             }
