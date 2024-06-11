@@ -16,6 +16,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -322,7 +323,6 @@ class MainScreenTest {
                 IntentMatchers.hasData(fact4.url)
             )
             onNodeWithText(fact4.text)
-//                .performSemanticsAction(SemanticsActions.OnLongClick)
                 .performTouchInput { longClick() }
             Intents.intended(expectedIntent)
             Intents.release()

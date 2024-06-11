@@ -192,7 +192,7 @@ class MainViewModelTest {
             viewModel.fetchNewFact()
 
             viewModel.removeFact(dummyFact2.id)
-            viewModel.confirmRemoval(dummyFact2.id)
+            viewModel.confirmRemoval()
 
             viewModel.undoRemove(dummyFact2.id, 1)
 
