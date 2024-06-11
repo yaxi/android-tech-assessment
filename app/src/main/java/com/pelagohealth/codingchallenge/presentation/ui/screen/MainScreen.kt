@@ -82,7 +82,7 @@ fun MainScreen(viewModel: MainViewModel) {
         onFetchFact = { viewModel.fetchNewFact() },
         onRemove = { id -> viewModel.removeFact(id) },
         onUndo = { id, index -> viewModel.undoRemove(id, index) },
-        onConfirmRemoval = { id -> viewModel.confirmRemoval() }
+        onConfirmRemoval = { id -> viewModel.confirmRemoval(id) }
     )
 }
 
@@ -119,6 +119,7 @@ fun MainScreen(
 
     LaunchedEffect(showUndo, undoId, undoIndex) {
         if (showUndo && undoIndex >= 0) {
+            snackbarHostState.currentSnackbarData?.dismiss()
             onRemove(undoId)
             coroutineScope.launch {
                 val snackbarResult = snackbarHostState.showSnackbar(

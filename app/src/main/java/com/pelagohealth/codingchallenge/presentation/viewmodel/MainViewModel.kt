@@ -29,7 +29,7 @@ class MainViewModel @Inject constructor(
     }
 
     private val undoStack by lazy {
-        Stack<Fact>()
+        ArrayDeque<Fact>()
     }
 
     init {
@@ -66,7 +66,9 @@ class MainViewModel @Inject constructor(
 
     fun removeFact(id: String) {
         val undoFact = _viewState.value.facts.find { it.id == id }
-        undoStack.push(undoFact)
+        undoFact?.let {
+            undoStack.addFirst(undoFact)
+        }
         val facts = _viewState.value.facts.toMutableList().filterNot {
             it.id == id
         }
@@ -74,14 +76,14 @@ class MainViewModel @Inject constructor(
         setState { copy(facts = facts) }
     }
 
-    fun confirmRemoval() {
-        // clears the undo cache
-        undoStack.clear()
+    fun confirmRemoval(id: String) {
+        // update the undo cache
+        undoStack.removeIf { it.id == id }
     }
 
     fun undoRemove(id: String, index: Int) {
         if (undoStack.isNotEmpty()) {
-            val uf = undoStack.pop()
+            val uf = undoStack.removeFirst()
             val list = ArrayDeque(_viewState.value.facts).also { l -> l.add(index, uf) }
             trimList(list)
             setState { copy(facts = list) }
