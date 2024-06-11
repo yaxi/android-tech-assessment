@@ -55,6 +55,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,8 +74,7 @@ import com.pelagohealth.codingchallenge.ui.theme.PelagoCodingChallengeTheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen() {
-    val viewModel: MainViewModel = viewModel()
+fun MainScreen(viewModel: MainViewModel) {
     val state by viewModel.viewState.collectAsState()
 
     MainScreen(
@@ -87,7 +87,7 @@ fun MainScreen() {
 }
 
 @Composable
-private fun MainScreen(
+fun MainScreen(
     state: MainViewState,
     onFetchFact: () -> Unit,
     onRemove: (id: String) -> Unit,
@@ -177,12 +177,13 @@ private fun MainScreen(
             ConstraintLayout(Modifier.fillMaxSize()) {
                 val (currentRef, buttonRef, listRef, loadingRef) = createRefs()
                 if (state.isLoading) {
-                    LoadingIndicator(Modifier.constrainAs(loadingRef) {
-                        top.linkTo(parent.top, margin = 16.dp)
-                        bottom.linkTo(buttonRef.top, margin = 16.dp)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                    })
+                    LoadingIndicator(
+                        Modifier.constrainAs(loadingRef) {
+                            top.linkTo(parent.top, margin = 16.dp)
+                            bottom.linkTo(buttonRef.top, margin = 16.dp)
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                        })
                 } else {
                     Text(
                         modifier = Modifier
@@ -224,12 +225,14 @@ private fun MainScreen(
                     Text(stringResource(R.string.action_more_facts))
                 }
                 LazyColumn(
-                    modifier = Modifier.constrainAs(listRef) {
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(parent.bottom, margin = 16.dp)
-                        height = Dimension.value(216.dp)
-                    },
+                    modifier = Modifier
+                        .constrainAs(listRef) {
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            bottom.linkTo(parent.bottom, margin = 16.dp)
+                            height = Dimension.value(216.dp)
+                        }
+                        .testTag("bottom_list"),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     state = lazyColumnState
                 ) {
@@ -285,10 +288,14 @@ private fun LoadingIndicator(
     ) {
         Text(
             modifier = Modifier.fillMaxWidth(),
-            text = "Loading Random Facts",
+            text = stringResource(R.string.loading_random_facts),
             textAlign = TextAlign.Center
         )
-        LinearProgressIndicator(modifier = Modifier.width(200.dp))
+        LinearProgressIndicator(
+            modifier = Modifier
+                .width(200.dp)
+                .testTag("loading_indicator")
+        )
     }
 }
 

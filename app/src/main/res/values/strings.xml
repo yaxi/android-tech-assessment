@@ -5,4 +5,5 @@
     <string name="fact_removed">Fact removed.</string>
     <string name="error_message">Error on getting Facts. Error: %1$s</string>
     <string name="text_tips">Long Click to open the link</string>
+    <string name="loading_random_facts">Loading Random Facts</string>
 </resources>
